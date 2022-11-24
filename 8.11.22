@@ -1,0 +1,29 @@
+# Задание 8.11.22
+'''
+1) Прочитать содержимое файла
+2) Дописать третий вопрос в блок math
+3) Записать в файл
+'''
+
+import json
+import pprint
+
+q3 = {'question': '360 - 60 = ?',
+      'options': [
+          '300',
+          '299',
+          '301',
+          '0'
+      ],
+      'answer': '300'
+      }
+
+with open('quiz.json', 'r') as f:
+    data = json.load(f)
+    pprint.pprint(data)
+    data['quiz']['maths']['q3'] = q3
+    f.close()
+
+with open('quiz.json', 'w') as f:
+    json.dump(data, f, sort_keys=True, indent=2)
+    f.close()
