@@ -1,0 +1,45 @@
+class Shape:
+    def __init__(self, x=0, y=0):
+        self.x = x
+        self.y = y
+
+    def move(self, delta_x, delta_y):
+        self.x += delta_x
+        self.y += delta_y
+
+
+class Rectangle(Shape):
+    """Class Rectangle"""
+    def __init__(self, side1=1, side2=1, x=0, y=0):
+        self.__side1 = side1
+        self.__side2 = side2
+        super().__init__(x, y)
+
+    def area(self):
+        return self.side1 * self.side2
+
+    @property
+    def size1(self):
+        return self.__side1
+
+    @property
+    def size2(self):
+        return self.__side2
+
+    @size1.setter
+    def size1(self, new_side1):
+        if new_side1 < 0:
+            raise ValueError
+        self.__side1 = new_side1
+
+    @size2.setter
+    def side2(self, new_side2):
+        if new_side2 < 0:
+            raise ValueError
+        self.__side2 = new_side2
+
+
+x = Rectangle()
+print(x.size2)
+x.size1 = -5
+print(x.size1)
