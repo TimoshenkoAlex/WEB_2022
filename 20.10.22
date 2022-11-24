@@ -1,0 +1,15 @@
+'''
+Написать функцию, которая обработает входную строку:
+ # Привести к одному регистру
+ # Удалить запятые и точки
+ # Разбить на слова
+# Записать все слова по одному на строку файла
+'''
+def change(line):
+    line = line.lower().replace(',', '').replace('.', '').split()
+    with open('new_file.txt', 'w+') as f:
+        for word in line:
+            f.write(word + '\n')
+    
+new_line = input()
+changed_line = change(new_line)
