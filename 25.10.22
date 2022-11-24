@@ -1,0 +1,20 @@
+# Задание 25.10.22
+'''
+Написать функцию, которая "обернет" слово, передаваемое в параметре в тэг <html>.
+Пример:
+myfunction("hello") -> 
+"<html>hello<html>"
+'''
+
+def decorate(func):
+    def wrap(*args):
+        print('<html>')
+        func(*args)
+        print('<html>')
+    return wrap
+
+@decorate
+def print_word(word):
+    print(word)
+
+print_word('hello')
