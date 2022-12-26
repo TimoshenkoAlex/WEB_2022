@@ -1,44 +1,90 @@
 import json
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
+import psycopg2
+import random
+from operator import itemgetter
 app = Flask(__name__)
-data = [{'id': 0, 'name': 'Alex', 'surname': 'Turner'},
-        {'id': 1, 'name': 'Tom', 'surname': 'York'},
-        {'id': 2, 'name': 'Kek', 'surname': 'Mem'},
-        {'id': 3, 'name': 'Konstnatin', 'surname': 'Voronin'}]
+users = []
+conn = psycopg2.connect(
+    host='localhost',
+    database='Web2022',
+    user='postgres',
+    password='12345'
+)
+cursor = conn.cursor()
 
+sucess_message = {'sucess': True}
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
 
 @app.route('/users', methods=['GET'])
 def get_users():
-    return jsonify(data)
+    users.clear()
+    sql = 'select * from users'
+    cursor.execute(sql)
+    data = cursor.fetchall()
+    for el in data:
+        user = {'id': el[0], 'name': el[1], 'surname': el[2]}
+        users.append(user)
+    sorted_users = sorted(users, key=itemgetter('id'))
+    return jsonify(sorted_users)
+
+
+@app.route('/users/<int:id>', methods=['GET'])
+def get_user(id):
+    if id in [users[i]['id'] for i in range(len(users))]:
+        sql = 'select * from users where id = %s'
+        cursor.execute(sql, (int(id),))
+        data = cursor.fetchall()
+        return jsonify(data)
+    else:
+        print('Такого id не существует')
+        return "Такого id не существует"
 
 
 @app.route('/users', methods=['POST'])
 def add_user():
-    for i in range(len(data)):
-        if request.get_json()['id'] == data[i]['id']:
-            print('id уже существует')
-            break
+    get_users()
+    sql = 'INSERT INTO users VALUES (%s, %s, %s);'
+    if request.get_json()['id'] in [users[i]['id'] for i in range(len(users))]:
+        print('Такой id уже существует')
     else:
-        data.append(request.get_json())
-    return jsonify(data)
+        id = request.json['id']
+        name = request.json['name']
+        surname = request.json['surname']
+        cursor.execute(sql, (id, name, surname))
+        conn.commit()
+    return jsonify(sucess_message)
 
 
 @app.route('/users', methods=['DELETE'])
 def del_user():
-    if request.get_json()['id'] in [data[i]['id'] for i in range(len(data))]:
-        data.pop([i for i, x in enumerate(data) if x['id'] == request.get_json()['id']][0])
+    get_users()
+    sql = 'DELETE FROM users WHERE id = %s;'
+    if request.get_json()['id'] in [users[i]['id'] for i in range(len(users))]:
+        id = request.get_json()['id']
+        cursor.execute(sql, (int(id),))
+        conn.commit()
     else:
         print('Такого id не существует')
-    return jsonify(data)
+    return jsonify(users)
 
 
 @app.route('/users', methods=['PUT'])
 def update_user():
-    if request.get_json()['id'] in [data[i]['id'] for i in range(len(data))]:
-        data[[i for i, x in enumerate(data) if x['id'] == request.get_json()['id']][0]] = request.get_json()
+    get_users()
+    if request.get_json()['id'] in [users[i]['id'] for i in range(len(users))]:
+        sql = 'UPDATE public.users SET name=%s, surname=%s WHERE id = %s;'
+        id = request.json['id']
+        name = request.json['name']
+        surname = request.json['surname']
+        cursor.execute(sql, (name, surname, int(id)))
+        conn.commit()
     else:
         print('Такого id не существует')
-    return jsonify(data)
+    return jsonify(users)
 
 
 if __name__ == '__main__':
