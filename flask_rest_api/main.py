@@ -15,6 +15,8 @@ cursor = conn.cursor()
 
 sucess_message = {'sucess': True}
 
+id_error = {"error": "Пользователя с таким id не существует в базе данных, проверьте вводимые данные"}
+
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
@@ -34,11 +36,13 @@ def get_users():
 
 @app.route('/users/<int:id>', methods=['GET'])
 def get_user(id):
+    get_users()
     if id in [users[i]['id'] for i in range(len(users))]:
         sql = 'select * from users where id = %s'
         cursor.execute(sql, (int(id),))
         data = cursor.fetchall()
-        return jsonify(data)
+        user = {'id': data[0][0], 'name': data[0][1], 'surname': data[0][2]}
+        return jsonify(user)
     else:
         print('Такого id не существует')
         return "Такого id не существует"
@@ -67,9 +71,11 @@ def del_user():
         id = request.get_json()['id']
         cursor.execute(sql, (int(id),))
         conn.commit()
+        get_users()
+        return get_users()
     else:
         print('Такого id не существует')
-    return jsonify(users)
+        return jsonify(id_error)
 
 
 @app.route('/users', methods=['PUT'])
@@ -82,9 +88,10 @@ def update_user():
         surname = request.json['surname']
         cursor.execute(sql, (name, surname, int(id)))
         conn.commit()
+        return get_users()
     else:
         print('Такого id не существует')
-    return jsonify(users)
+        return jsonify(id_error)
 
 
 if __name__ == '__main__':
